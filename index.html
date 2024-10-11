@@ -60,13 +60,17 @@
         }
         .alert {
             padding: 15px;
-            background-color: #f44336;
-            color: white;
             margin-top: 20px;
             display: none;
+            border-radius: 5px;
         }
-        .success {
+        .alert.error {
+            background-color: #f44336;
+            color: white;
+        }
+        .alert.success {
             background-color: #4CAF50;
+            color: white;
         }
         .expense-list {
             margin-top: 20px;
@@ -131,6 +135,40 @@
     </div>
 
     <script>
+        // Show alert messages
+        function showAlert(message, isSuccess) {
+            const alertBox = document.getElementById('alert-box');
+            alertBox.textContent = message;
+            alertBox.className = 'alert ' + (isSuccess ? 'success' : 'error');
+            alertBox.style.display = 'block';
+            setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 3000); // Hide after 3 seconds
+        }
+
+        // Load expenses from the server
+        function loadExpenses() {
+            fetch('/get-expenses')
+                .then(response => response.json())
+                .then(data => {
+                    const expensesContainer = document.getElementById('expenses-container');
+                    expensesContainer.innerHTML = ''; // Clear previous expenses
+                    data.forEach(expense => {
+                        const expenseItem = document.createElement('div');
+                        expenseItem.className = 'expense-item';
+                        expenseItem.innerHTML = `
+                            <strong>${expense.expense_title}</strong> - ${expense.amount} PKR<br>
+                            Date: ${expense.expense_date}<br>
+                            Category: ${expense.category}<br>
+                            Notes: ${expense.notes || 'None'}
+                        `;
+                        expensesContainer.appendChild(expenseItem);
+                    });
+                })
+                .catch(error => console.error('Error loading expenses:', error));
+        }
+
+        // Event listener for form submission
         document.getElementById('expense-form').addEventListener('submit', function(event) {
             event.preventDefault();
             
@@ -139,7 +177,14 @@
             const date = document.getElementById('expense-date').value;
             const category = document.getElementById('expense-category').value;
             const notes = document.getElementById('expense-notes').value;
-            
+
+            // Debugging logs
+            console.log('Title:', title);
+            console.log('Amount:', amount);
+            console.log('Date:', date);
+            console.log('Category:', category);
+            console.log('Notes:', notes);
+
             if (!title || !amount || !date || !category) {
                 showAlert('All fields are required!', false);
                 return;
@@ -165,16 +210,19 @@
                 if (response.ok) {
                     showAlert('Expense added successfully!', true);
                     loadExpenses(); // Reload expenses after adding
+                    document.getElementById('expense-form').reset(); // Reset the form fields
                 } else {
                     showAlert('Error adding expense!', false);
                 }
-                document.getElementById('expense-form').reset(); // Clear the form
             })
-            .catch(err => {
-                console.error('Error:', err);
-                showAlert('Error adding expense!', false);
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('An unexpected error occurred!', false);
             });
         });
 
-        function showAlert(message, success) {
-            const alertBox = document
+        // Initial load of expenses
+        loadExpenses();
+    </script>
+</body>
+</html>

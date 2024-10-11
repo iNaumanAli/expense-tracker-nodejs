@@ -10,7 +10,7 @@ const port = 3000;
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Middleware to parse JSON bodies
-app.use(bodyParser.json()); 
+app.use(bodyParser.json());
 
 // MySQL database connection setup
 const connection = mysql.createConnection({
@@ -60,7 +60,7 @@ app.post('/submit-expense', (req, res) => {
     const sql = 'INSERT INTO expenses (expense_title, expense_date, category, amount, notes) VALUES (?, ?, ?, ?, ?)';
     const values = [expense.expense_title, expense.expense_date, expense.category, expense.amount, expense.notes];
 
-    db.query(sql, values, (err, result) => {
+    connection.query(sql, values, (err, result) => { // Changed from db.query to connection.query
         if (err) {
             console.error('Error inserting data into database:', err);
             res.status(500).send('Database error');
@@ -73,7 +73,7 @@ app.post('/submit-expense', (req, res) => {
 // Route to retrieve expenses from the database
 app.get('/get-expenses', (req, res) => {
     const query = 'SELECT * FROM expenses ORDER BY expense_date DESC';
-    db.query(query, (err, results) => {
+    connection.query(query, (err, results) => { // Changed from db.query to connection.query
         if (err) {
             console.error('Error fetching expenses:', err);
             res.status(500).send('Error fetching expenses data!');
