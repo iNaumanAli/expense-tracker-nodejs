@@ -1,6 +1,7 @@
 const express = require('express');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const bodyParser = require('body-parser');
+require('dotenv').config(); // Load environment variables
 
 const app = express();
 const port = 3000;
@@ -12,15 +13,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json()); 
 
 // MySQL database connection setup
-const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'nauman',  // Replace with your MySQL username
-    password: '@Nauman129',  // Replace with your MySQL password
-    database: 'expenses_db'  // Replace with your database name
+const connection = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
 });
 
-// Connect to MySQL database
-db.connect((err) => {
+connection.connect((err) => {
     if (err) {
         console.error('Error connecting to MySQL:', err);
         return;
@@ -53,8 +53,8 @@ app.post('/submit-expense', (req, res) => {
         expense_title: expense_title,
         expense_date: expense_date,
         category: category,
-        amount: parseFloat(amount).toFixed(2), // Ensure amount is a float
-        notes: notes || null  // Set notes to null if not provided
+        amount: parseFloat(amount).toFixed(2),
+        notes: notes || null
     };
 
     const sql = 'INSERT INTO expenses (expense_title, expense_date, category, amount, notes) VALUES (?, ?, ?, ?, ?)';
@@ -72,18 +72,18 @@ app.post('/submit-expense', (req, res) => {
 
 // Route to retrieve expenses from the database
 app.get('/get-expenses', (req, res) => {
-    const query = 'SELECT * FROM expenses ORDER BY expense_date DESC'; // Fetch expenses ordered by date
+    const query = 'SELECT * FROM expenses ORDER BY expense_date DESC';
     db.query(query, (err, results) => {
         if (err) {
             console.error('Error fetching expenses:', err);
             res.status(500).send('Error fetching expenses data!');
             return;
         }
-        res.json(results); // Send the results as JSON
+        res.json(results);
     });
 });
 
 // Start the server listening on all network interfaces
 app.listen(port, '0.0.0.0', () => {
-    console.log(`Server running and accessible at http://192.168.100.4:${port}/`);
+    console.log(`Server running and accessible at http://localhost:${port}/`);
 });
